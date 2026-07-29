@@ -30,3 +30,4 @@ Thumbs.db
 # Coverage reports
 .coverage
 htmlcov/
+.env
