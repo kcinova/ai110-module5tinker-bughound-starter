@@ -82,7 +82,9 @@ def assess_risk(
     # ----------------------------
     # Auto-fix policy
     # ----------------------------
-    should_autofix = level == "low"
+   # [Part 3 guardrail] Only auto-fix low-risk changes that contain NO high-severity issues.
+    has_high_severity = any(i.get("severity") == "High" for i in issues)
+    should_autofix = level == "low" and not has_high_severity
 
     if not reasons:
         reasons.append("No significant risks detected.")
