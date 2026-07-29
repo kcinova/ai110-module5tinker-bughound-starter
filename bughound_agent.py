@@ -166,7 +166,9 @@ class BugHoundAgent:
         if any(i.get("type") == "Code Quality" for i in issues):
             if "import logging" not in fixed:
                 fixed = "import logging\n\n" + fixed
-            fixed = fixed.replace("print(", "logging.info(")
+            # Only rewrite real print() calls, not `print(` inside strings,
+            # comments, or identifiers like `pprint(`.
+            fixed = re.sub(r"(?<![\w.])print\s*\(", "logging.info(", fixed)
 
         return fixed
 

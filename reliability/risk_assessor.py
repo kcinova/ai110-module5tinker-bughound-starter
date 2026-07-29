@@ -1,3 +1,4 @@
+import re
 from typing import Dict, List
 
 
@@ -57,7 +58,8 @@ def assess_risk(
         score -= 30
         reasons.append("Return statements may have been removed.")
 
-    if "except:" in original_code and "except:" not in fixed_code:
+    bare_except = re.compile(r"\bexcept\s*:")
+    if bare_except.search(original_code) and not bare_except.search(fixed_code):
         # This is usually good, but still risky.
         score -= 5
         reasons.append("Bare except was modified, verify correctness.")

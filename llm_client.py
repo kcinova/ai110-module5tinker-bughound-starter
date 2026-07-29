@@ -43,20 +43,19 @@ class GeminiClient:
         """
         Sends a single request to Gemini.
 
-        If an error occurs, it returns an empty string, triggering the agent's
-        heuristic fallback logic.
+        Errors (API failures, rate limits, safety blocks) are allowed to
+        propagate so the agent's own try/except can log the real cause and
+        fall back to its offline heuristics.
         """
-        try:
-            merged_prompt = f"{system_prompt}\n\n{user_prompt}".strip()
-            response = self.client.models.generate_content(
-                model=self.model_name,
-                contents=merged_prompt,
-            )
+        from google.genai import types
 
-            # Defensive: response.text can be None or raise an error if blocked by filters.
-            return response.text or ""
+        merged_prompt = f"{system_prompt}\n\n{user_prompt}".strip()
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            contents=merged_prompt,
+            config=types.GenerateContentConfig(temperature=self.temperature),
+        )
 
-        except Exception:
-            # Returning empty string allows the agent to detect the failure
-            # and switch to offline rules.
-            return ""
+        # Defensive: response.text can be None if the response was empty or
+        # blocked by safety filters.
+        return response.text or ""
