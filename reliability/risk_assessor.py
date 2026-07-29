@@ -86,6 +86,17 @@ def assess_risk(
     has_high_severity = any(i.get("severity") == "High" for i in issues)
     should_autofix = level == "low" and not has_high_severity
 
+    # [Part 4 guardrail] Never auto-fix when the original has no real executable
+    # code (empty after stripping whitespace and comment-only lines). There is
+    # nothing to safely fix, so a human should confirm.
+    real_code_lines = [
+        line for line in original_code.splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
+    if not real_code_lines:
+        should_autofix = False
+        reasons.append("No real code to fix; auto-fix disabled.")
+
     if not reasons:
         reasons.append("No significant risks detected.")
 

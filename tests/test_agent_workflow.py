@@ -47,3 +47,13 @@ def test_mock_client_forces_llm_fallback_to_heuristics_for_analysis():
     assert any(issue.get("type") == "Code Quality" for issue in result["issues"])
     # Ensure we logged the fallback path
     assert any("Falling back to heuristics" in entry.get("message", "") for entry in result["logs"])
+
+
+def test_comments_only_input_is_not_auto_fixable():
+    # Comments-only input has no real code to fix; the agent must not claim it
+    # can safely auto-apply a fix (guardrail in reliability.risk_assessor).
+    agent = BugHoundAgent(client=MockClient())
+    code = "# just a note\n# nothing to run here\n"
+    result = agent.run(code)
+
+    assert result["risk"]["should_autofix"] is False
